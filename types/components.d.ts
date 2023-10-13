@@ -9,6 +9,11 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    AButton: typeof import('ant-design-vue/es')['Button']
+    CustomBlock: typeof import('./../src/components/CustomBlock.vue')['default']
+    CustomBlockControl: typeof import('./../src/components/CustomBlockControl.vue')['default']
+    CustomBlockLine: typeof import('./../src/components/blocks/CustomBlockLine.vue')['default']
+    CustomBox: typeof import('./../src/components/CustomBox.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
