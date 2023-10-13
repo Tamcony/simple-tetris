@@ -7,10 +7,10 @@
         width: `${blockStore.config.blockSize * blockStore.config.containerSize.width}px`
       }"
     >
-      <div class="w-full h-full flex flex-row justify-between relative">
+      <div class="w-full h-full flex flex-row justify-between relative overflow-hidden">
         <template v-for="item in blockStore.currentBlockBox.blockList">
           <CustomBlock
-            :type="blockModel.BlockType.LINE"
+            :type="blockModel.BlockType.BLOCK_I"
             :block="item"
             :size="blockStore.config.blockSize"
             class="absolute"
@@ -37,6 +37,8 @@
     <CustomBlockControl
       @move="handleMove"
       @rotate="handleRotate"
+      @reset="blockStore.initGame"
+      @start="blockStore.startGame"
     ></CustomBlockControl>
   </div>
 </template>
@@ -68,7 +70,6 @@ const handleRotate = () => {
 }
 
 onMounted(() => {
-  blockStore.startGame()
   renderBlock(blockStore.currentBlock)
 })
 

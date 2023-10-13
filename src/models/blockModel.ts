@@ -1,6 +1,11 @@
 export enum BlockType {
-  LINE = 'line',
-  SQUARE = 'square'
+  BLOCK_I = 'I',
+  BLOCK_O = 'O',
+  BLOCK_J = 'J',
+  BLOCK_L = 'L',
+  BLOCK_T = 'T',
+  BLOCK_S = 'S',
+  BLOCK_Z = 'Z'
 }
 
 export enum BlockAngle {
@@ -13,7 +18,6 @@ export enum BlockAngle {
 export interface Block {
   id: string
   type: BlockType
-  length: number
   center: {
     index: number
     offsetX: number

@@ -4,14 +4,25 @@ import { v4 as uuidv4 } from 'uuid'
 import { cloneDeep } from 'lodash'
 
 export const useBlockStore = defineStore('blockStore', () => {
+  const config = ref({
+    blockSize: 20,
+    containerSize: {
+      height: 20,
+      width: 10
+    }
+  })
   const defaultBlock: {
-    line: blockModel.Block
-    square: blockModel.Block
+    I: blockModel.Block
+    O: blockModel.Block
+    J: blockModel.Block
+    L?: blockModel.Block
+    T?: blockModel.Block
+    S?: blockModel.Block
+    Z?: blockModel.Block
   } = {
-    line: {
+    I: {
       id: '',
-      type: blockModel.BlockType.LINE,
-      length: 4,
+      type: blockModel.BlockType.BLOCK_I,
       center: {
         index: 1,
         offsetX: 1,
@@ -42,10 +53,9 @@ export const useBlockStore = defineStore('blockStore', () => {
         ]
       }
     },
-    square: {
+    O: {
       id: '',
-      type: blockModel.BlockType.SQUARE,
-      length: 4,
+      type: blockModel.BlockType.BLOCK_O,
       center: {
         index: 0,
         offsetX: 0,
@@ -73,33 +83,73 @@ export const useBlockStore = defineStore('blockStore', () => {
           }
         ]
       }
+    },
+    J: {
+      id: '',
+      type: blockModel.BlockType.BLOCK_J,
+      center: {
+        index: 2,
+        offsetX: 1,
+        offsetY: 2
+      },
+      blockBoard: new Array(2).fill(0).map((item, index) => {
+        if (index == 0) {
+          return [0, 0, 1]
+        }
+        return [1, 1, 1]
+      }),
+      blockData: {
+        angle: blockModel.BlockAngle.ANGLE_0,
+        position: [
+          {
+            x: 4,
+            y: 2
+          },
+          {
+            x: 5,
+            y: 2
+          },
+          {
+            x: 5,
+            y: 1
+          },
+          {
+            x: 5,
+            y: 0
+          }
+        ]
+      }
     }
   }
-  const config = ref({
-    blockSize: 20,
-    containerSize: {
-      height: 20,
-      width: 10
-    }
-  })
-
-  const currentBlock = ref<blockModel.Block>(defaultBlock.line)
-  const currentBlockBox = ref<blockModel.BlockBox>({
+  const defaultBlockBox: blockModel.BlockBox = {
     bottomHeight: new Array(config.value.containerSize.width).fill(0).map(() => config.value.containerSize.height - 1),
     blockPositions: new Array(config.value.containerSize.width)
       .fill(0)
       .map(() => new Array(config.value.containerSize.height).fill(0)),
     blockList: []
-  })
+  }
+
+  const currentBlock = ref<blockModel.Block>(cloneDeep(defaultBlock.J))
+  const currentBlockBox = ref<blockModel.BlockBox>(cloneDeep(defaultBlockBox))
   const timmer = ref<NodeJS.Timer>()
 
   const initBlockBoard = (type: blockModel.BlockType) => {
     //初始化方块
     switch (type) {
-      case blockModel.BlockType.LINE:
-        return cloneDeep(defaultBlock.line)
-      case blockModel.BlockType.SQUARE:
-        return cloneDeep(defaultBlock.square)
+      case blockModel.BlockType.BLOCK_I:
+        return cloneDeep(defaultBlock.I)
+      case blockModel.BlockType.BLOCK_O:
+        return cloneDeep(defaultBlock.O)
+      case blockModel.BlockType.BLOCK_J:
+        return cloneDeep(defaultBlock.J)
+      case blockModel.BlockType.BLOCK_L:
+        return cloneDeep(defaultBlock.L)
+      case blockModel.BlockType.BLOCK_S:
+        return cloneDeep(defaultBlock.S)
+      case blockModel.BlockType.BLOCK_Z:
+        return cloneDeep(defaultBlock.Z)
+      case blockModel.BlockType.BLOCK_T:
+        return cloneDeep(defaultBlock.T)
     }
   }
 
@@ -119,7 +169,7 @@ export const useBlockStore = defineStore('blockStore', () => {
 
     //旋转方块
     switch (block.type) {
-      case blockModel.BlockType.LINE:
+      case blockModel.BlockType.BLOCK_I:
         if (newAngle == blockModel.BlockAngle.ANGLE_0 || newAngle == blockModel.BlockAngle.ANGLE_180) {
           const newPostion = [
             {
@@ -178,7 +228,7 @@ export const useBlockStore = defineStore('blockStore', () => {
           block.blockData.position = newPostion
         }
         break
-      case blockModel.BlockType.SQUARE:
+      case blockModel.BlockType.BLOCK_O:
         break
     }
     block.blockData.angle = newAngle as blockModel.BlockAngle
@@ -231,9 +281,10 @@ export const useBlockStore = defineStore('blockStore', () => {
 
   const randomGennerateBlock = () => {
     //TODO 这里用随机
-    const randomArr = [blockModel.BlockType.LINE, blockModel.BlockType.SQUARE]
-    const type = randomArr[Math.floor(Math.random() * randomArr.length)]
-    const block = initBlockBoard(type)
+    // const randomArr = [blockModel.BlockType.BLOCK_I, blockModel.BlockType.BLOCK_O]
+    // const type = randomArr[Math.floor(Math.random() * randomArr.length)]
+    const type = blockModel.BlockType.BLOCK_J
+    const block = initBlockBoard(type) || cloneDeep(defaultBlock.I)
     block.id = uuidv4()
     currentBlock.value = block
     currentBlockBox.value.blockList.push(block)
@@ -277,7 +328,7 @@ export const useBlockStore = defineStore('blockStore', () => {
         offset.y - 1
       )
     })
-    block.blockBoard = new Array(4).fill(new Array(4).fill(0))
+    block.blockBoard.fill(new Array(block.blockBoard[0].length).fill(0))
     randomGennerateBlock()
   }
 
@@ -286,12 +337,18 @@ export const useBlockStore = defineStore('blockStore', () => {
     randomGennerateBlock()
     timmer.value = setInterval(() => {
       moveBlock(blockModel.MoveType.CUSTOME)
-    }, 500)
+    }, 10000)
   }
   const endGame = () => {
     //结束游戏
     alert('游戏结束')
     // console.log('游戏结束')
+    clearInterval(timmer.value)
+  }
+
+  const initGame = () => {
+    currentBlock.value = cloneDeep(defaultBlock.I)
+    currentBlockBox.value = cloneDeep(defaultBlockBox)
     clearInterval(timmer.value)
   }
 
@@ -336,6 +393,7 @@ export const useBlockStore = defineStore('blockStore', () => {
     moveBlock,
     randomGennerateBlock,
     startGame,
-    endGame
+    endGame,
+    initGame
   }
 })
