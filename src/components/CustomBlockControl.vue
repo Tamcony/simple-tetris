@@ -5,7 +5,7 @@
     </div>
     <div class="flex flex-col">
       <a-button @click="emits('rotate')">↑</a-button>
-      <a-button @click="handleChange(blockModel.MoveType.BOTTOM)">↓</a-button>
+      <a-button @click="handleChange(blockModel.MoveType.CUSTOM)">↓</a-button>
     </div>
     <div class="flex flex-row">
       <a-button @click="handleChange(blockModel.MoveType.RIGHT)">→</a-button>

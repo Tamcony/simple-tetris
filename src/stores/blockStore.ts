@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import * as blockModel from '@/models/blockModel'
 import { v4 as uuidv4 } from 'uuid'
+import { cloneDeep } from 'lodash'
 
 export const useBlockStore = defineStore('blockStore', () => {
   const defaultBlock: {
@@ -19,7 +20,7 @@ export const useBlockStore = defineStore('blockStore', () => {
         return [0, 1, 0, 0]
       }),
       blockData: {
-        angle: 0,
+        angle: blockModel.BlockAngle.ANGLE_0,
         position: [
           {
             x: 3,
@@ -41,83 +42,128 @@ export const useBlockStore = defineStore('blockStore', () => {
       }
     }
   }
+  const config = ref({
+    blockSize: 20,
+    containerSize: {
+      height: 20,
+      width: 10
+    }
+  })
 
-  const currentBlock = reactive<blockModel.Block>(defaultBlock.line)
+  const currentBlock = ref<blockModel.Block>(defaultBlock.line)
+  const currentBlockBox = ref<blockModel.BlockBox>({
+    bottomHeight: new Array(config.value.containerSize.width).fill(0).map(() => config.value.containerSize.height - 1),
+    blockPositions: new Array(config.value.containerSize.width)
+      .fill(0)
+      .map(() => new Array(config.value.containerSize.height).fill(0)),
+    blockList: []
+  })
+  const timmer = ref<NodeJS.Timer>()
 
-  const initBlockBoard = (block: blockModel.Block = currentBlock) => {
+  const initBlockBoard = (type: blockModel.BlockType) => {
     //初始化方块
-    switch (block.type) {
+    switch (type) {
       case blockModel.BlockType.LINE:
-        block = defaultBlock.line
-        break
+        return cloneDeep(defaultBlock.line)
     }
   }
 
-  const rotateBlock = (block: blockModel.Block = currentBlock) => {
-    //顺时针旋转
-    if (block.blockData.angle === 270) {
-      block.blockData.angle = 0
-    } else {
-      block.blockData.angle += 90
+  const routateCheck = (block: blockModel.Block = currentBlock.value) => {
+    switch (block.type) {
+      case blockModel.BlockType.LINE:
     }
+  }
+
+  const rotateBlock = (block: blockModel.Block = currentBlock.value) => {
+    //顺时针旋转
+    const { position } = block.blockData
+    const centerIndex = block.center.index
+    const { width } = config.value.containerSize
+
+    let newAngle: blockModel.BlockAngle = block.blockData.angle
+
+    if (newAngle === 270) {
+      newAngle = 0
+    } else {
+      newAngle += 90
+    }
+
     //旋转方块
     switch (block.type) {
       case blockModel.BlockType.LINE:
-        block.blockBoard = new Array(4).fill(new Array(4).fill(0))
-        if (block.blockData.angle == 0 || block.blockData.angle == 180) {
+        if (newAngle == blockModel.BlockAngle.ANGLE_0 || newAngle == blockModel.BlockAngle.ANGLE_180) {
+          const newPostion = [
+            {
+              x: position[centerIndex].x - 1,
+              y: position[centerIndex].y
+            },
+            {
+              x: position[centerIndex].x,
+              y: position[centerIndex].y
+            },
+            {
+              x: position[centerIndex].x + 1,
+              y: position[centerIndex].y
+            },
+            {
+              x: position[centerIndex].x + 2,
+              y: position[centerIndex].y
+            }
+          ]
+          if (
+            newPostion.some((offset) => {
+              return offset.x < 0 || offset.x >= width || currentBlockBox.value.blockPositions[offset.x][offset.y] === 1
+            })
+          )
+            return false
+          block.blockBoard = new Array(4).fill(new Array(4).fill(0))
           block.blockBoard.forEach((item) => (item[1] = 1))
-          block.blockData.position = [
+          block.blockData.position = newPostion
+        } else if (newAngle == blockModel.BlockAngle.ANGLE_90 || newAngle == blockModel.BlockAngle.ANGLE_270) {
+          const newPostion = [
             {
-              x: block.blockData.position[1].x - 1,
-              y: block.blockData.position[1].y
+              x: position[centerIndex].x,
+              y: position[centerIndex].y - 1
             },
             {
-              x: block.blockData.position[1].x,
-              y: block.blockData.position[1].y
+              x: position[centerIndex].x,
+              y: position[centerIndex].y
             },
             {
-              x: block.blockData.position[1].x + 1,
-              y: block.blockData.position[1].y
+              x: position[centerIndex].x,
+              y: position[centerIndex].y + 1
             },
             {
-              x: block.blockData.position[1].x + 2,
-              y: block.blockData.position[1].y
+              x: position[centerIndex].x,
+              y: position[centerIndex].y + 2
             }
           ]
-        } else {
+          if (
+            newPostion.some((offset) => {
+              return currentBlockBox.value.blockPositions[offset.x][offset.y] === 1
+            })
+          )
+            return false
+          block.blockBoard = new Array(4).fill(new Array(4).fill(0))
           block.blockBoard[1] = [1, 1, 1, 1]
-
-          block.blockData.position = [
-            {
-              x: block.blockData.position[1].x,
-              y: block.blockData.position[1].y - 1
-            },
-            {
-              x: block.blockData.position[1].x,
-              y: block.blockData.position[1].y
-            },
-            {
-              x: block.blockData.position[1].x,
-              y: block.blockData.position[1].y + 1
-            },
-            {
-              x: block.blockData.position[1].x,
-              y: block.blockData.position[1].y + 2
-            }
-          ]
+          block.blockData.position = newPostion
         }
         break
     }
+    block.blockData.angle = newAngle as blockModel.BlockAngle
   }
 
   const moveBlock = (
     action: blockModel.MoveType = blockModel.MoveType.CUSTOM,
-    block: blockModel.Block = currentBlock
+    block: blockModel.Block = currentBlock.value
   ) => {
-    console.log('move:', action)
+    //移动方块
+    if (boundaryCheck(action, block)) return
+    const { position } = block.blockData
+    let newPosition: blockModel.Block['blockData']['position'] = []
     switch (action) {
       case blockModel.MoveType.CUSTOM:
-        block.blockData.position = block.blockData.position.map((offset) => {
+        newPosition = position.map((offset) => {
           return {
             x: offset.x,
             y: offset.y + 1
@@ -125,7 +171,7 @@ export const useBlockStore = defineStore('blockStore', () => {
         })
         break
       case blockModel.MoveType.LEFT:
-        block.blockData.position = block.blockData.position.map((offset) => {
+        newPosition = position.map((offset) => {
           return {
             x: offset.x - 1,
             y: offset.y
@@ -133,37 +179,106 @@ export const useBlockStore = defineStore('blockStore', () => {
         })
         break
       case blockModel.MoveType.RIGHT:
-        block.blockData.position = block.blockData.position.map((offset) => {
+        newPosition = position.map((offset) => {
           return {
             x: offset.x + 1,
             y: offset.y
           }
         })
         break
-      case blockModel.MoveType.BOTTOM:
-        block.blockData.position = block.blockData.position.map((offset) => {
-          return {
-            x: offset.x,
-            y: offset.y + 1
-          }
-        })
-        break
+    }
+    if (
+      newPosition.every((offset) => {
+        return currentBlockBox.value.blockPositions[offset.x][offset.y] !== 1
+      })
+    ) {
+      block.blockData.position = newPosition
+    } else if (action === blockModel.MoveType.CUSTOM) {
+      blockReachBottom(block)
     }
   }
 
   const randomGennerateBlock = () => {
-    currentBlock.id = uuidv4()
     //TODO 这里用随机
     const randomArr = [blockModel.BlockType.LINE]
-    currentBlock.type = randomArr[Math.floor(Math.random() * randomArr.length)]
-    initBlockBoard()
+    const type = randomArr[Math.floor(Math.random() * randomArr.length)]
+    const block = initBlockBoard(type)
+    block.id = uuidv4()
+    currentBlock.value = block
+    currentBlockBox.value.blockList.push(block)
   }
 
+  const boundaryCheck = (
+    action: blockModel.MoveType = blockModel.MoveType.CUSTOM,
+    block: blockModel.Block = currentBlock.value
+  ) => {
+    //边界检测
+    const { containerSize } = config.value
+    const { position } = block.blockData
+    switch (action) {
+      case blockModel.MoveType.CUSTOM:
+        const flag = position.some((offset) => {
+          return offset.y >= containerSize.height - 1
+        })
+        if (flag) {
+          blockReachBottom(block)
+          return true
+        }
+        break
+      case blockModel.MoveType.LEFT:
+        return position.some((offset) => {
+          return offset.x <= 0
+        })
+      case blockModel.MoveType.RIGHT:
+        return position.some((offset) => {
+          return offset.x >= containerSize.width - 1
+        })
+    }
+  }
+
+  const blockReachBottom = (block: blockModel.Block = currentBlock.value) => {
+    //方块到达底部
+    const { position } = block.blockData
+    position.forEach((offset) => {
+      currentBlockBox.value.blockPositions[offset.x][offset.y] = 1
+      currentBlockBox.value.bottomHeight[offset.x] = Math.min(
+        currentBlockBox.value.bottomHeight[offset.x],
+        offset.y - 1
+      )
+    })
+    randomGennerateBlock()
+  }
+
+  const startGame = () => {
+    //开始游戏
+    randomGennerateBlock()
+    timmer.value = setInterval(() => {
+      moveBlock(blockModel.MoveType.CUSTOM)
+    }, 500)
+  }
+  const endGame = () => {
+    //结束游戏
+    alert('游戏结束')
+    // console.log('游戏结束')
+    clearInterval(timmer.value)
+  }
+
+  watch(currentBlockBox.value.bottomHeight, (list) => {
+    if (!list || !currentBlock.value) return
+    if (list.some((item) => item < 0)) {
+      endGame()
+    }
+  })
+
   return {
+    config,
     currentBlock,
+    currentBlockBox,
     initBlockBoard,
     rotateBlock,
     moveBlock,
-    randomGennerateBlock
+    randomGennerateBlock,
+    startGame,
+    endGame
   }
 })
