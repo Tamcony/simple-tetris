@@ -10,6 +10,11 @@ export const useBlockStore = defineStore('blockStore', () => {
       id: '',
       type: blockModel.BlockType.LINE,
       length: 4,
+      center: {
+        index: 1,
+        offsetX: 1,
+        offsetY: 1
+      },
       blockBoard: new Array(4).fill(0).map(() => {
         return [0, 1, 0, 0]
       }),
@@ -17,20 +22,20 @@ export const useBlockStore = defineStore('blockStore', () => {
         angle: 0,
         position: [
           {
-            offsetX: 3,
-            offsetY: 0
+            x: 3,
+            y: 0
           },
           {
-            offsetX: 4,
-            offsetY: 0
+            x: 4,
+            y: 0
           },
           {
-            offsetX: 5,
-            offsetY: 0
+            x: 5,
+            y: 0
           },
           {
-            offsetX: 6,
-            offsetY: 0
+            x: 6,
+            y: 0
           }
         ]
       }
@@ -63,20 +68,20 @@ export const useBlockStore = defineStore('blockStore', () => {
           block.blockBoard.forEach((item) => (item[1] = 1))
           block.blockData.position = [
             {
-              offsetX: block.blockData.position[1].offsetX - 1,
-              offsetY: block.blockData.position[1].offsetY
+              x: block.blockData.position[1].x - 1,
+              y: block.blockData.position[1].y
             },
             {
-              offsetX: block.blockData.position[1].offsetX,
-              offsetY: block.blockData.position[1].offsetY
+              x: block.blockData.position[1].x,
+              y: block.blockData.position[1].y
             },
             {
-              offsetX: block.blockData.position[1].offsetX + 1,
-              offsetY: block.blockData.position[1].offsetY
+              x: block.blockData.position[1].x + 1,
+              y: block.blockData.position[1].y
             },
             {
-              offsetX: block.blockData.position[1].offsetX + 2,
-              offsetY: block.blockData.position[1].offsetY
+              x: block.blockData.position[1].x + 2,
+              y: block.blockData.position[1].y
             }
           ]
         } else {
@@ -84,20 +89,20 @@ export const useBlockStore = defineStore('blockStore', () => {
 
           block.blockData.position = [
             {
-              offsetX: block.blockData.position[1].offsetX,
-              offsetY: block.blockData.position[1].offsetY - 1
+              x: block.blockData.position[1].x,
+              y: block.blockData.position[1].y - 1
             },
             {
-              offsetX: block.blockData.position[1].offsetX,
-              offsetY: block.blockData.position[1].offsetY
+              x: block.blockData.position[1].x,
+              y: block.blockData.position[1].y
             },
             {
-              offsetX: block.blockData.position[1].offsetX,
-              offsetY: block.blockData.position[1].offsetY + 1
+              x: block.blockData.position[1].x,
+              y: block.blockData.position[1].y + 1
             },
             {
-              offsetX: block.blockData.position[1].offsetX,
-              offsetY: block.blockData.position[1].offsetY + 2
+              x: block.blockData.position[1].x,
+              y: block.blockData.position[1].y + 2
             }
           ]
         }
@@ -106,39 +111,40 @@ export const useBlockStore = defineStore('blockStore', () => {
   }
 
   const moveBlock = (
-    action: blockModel.moveType = blockModel.moveType.CUSTOM,
+    action: blockModel.MoveType = blockModel.MoveType.CUSTOM,
     block: blockModel.Block = currentBlock
   ) => {
+    console.log('move:', action)
     switch (action) {
-      case blockModel.moveType.CUSTOM:
-        block.blockData.position.map((offset) => {
+      case blockModel.MoveType.CUSTOM:
+        block.blockData.position = block.blockData.position.map((offset) => {
           return {
-            offsetX: offset.offsetX,
-            offsetY: offset.offsetY + 1
+            x: offset.x,
+            y: offset.y + 1
           }
         })
         break
-      case blockModel.moveType.LEFT:
-        block.blockData.position.map((offset) => {
+      case blockModel.MoveType.LEFT:
+        block.blockData.position = block.blockData.position.map((offset) => {
           return {
-            offsetX: offset.offsetX - 1,
-            offsetY: offset.offsetY
+            x: offset.x - 1,
+            y: offset.y
           }
         })
         break
-      case blockModel.moveType.RIGHT:
-        block.blockData.position.map((offset) => {
+      case blockModel.MoveType.RIGHT:
+        block.blockData.position = block.blockData.position.map((offset) => {
           return {
-            offsetX: offset.offsetX + 1,
-            offsetY: offset.offsetY
+            x: offset.x + 1,
+            y: offset.y
           }
         })
         break
-      case blockModel.moveType.BOTTOM:
-        block.blockData.position.map((offset) => {
+      case blockModel.MoveType.BOTTOM:
+        block.blockData.position = block.blockData.position.map((offset) => {
           return {
-            offsetX: offset.offsetX + 3,
-            offsetY: offset.offsetY
+            x: offset.x,
+            y: offset.y + 1
           }
         })
         break
@@ -157,6 +163,7 @@ export const useBlockStore = defineStore('blockStore', () => {
     currentBlock,
     initBlockBoard,
     rotateBlock,
+    moveBlock,
     randomGennerateBlock
   }
 })
