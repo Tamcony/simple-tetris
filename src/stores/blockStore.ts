@@ -6,6 +6,7 @@ import { cloneDeep } from 'lodash'
 export const useBlockStore = defineStore('blockStore', () => {
   const defaultBlock: {
     line: blockModel.Block
+    square: blockModel.Block
   } = {
     line: {
       id: '',
@@ -40,6 +41,38 @@ export const useBlockStore = defineStore('blockStore', () => {
           }
         ]
       }
+    },
+    square: {
+      id: '',
+      type: blockModel.BlockType.SQUARE,
+      length: 4,
+      center: {
+        index: 0,
+        offsetX: 0,
+        offsetY: 0
+      },
+      blockBoard: new Array(2).fill(new Array(2).fill(1)),
+      blockData: {
+        angle: blockModel.BlockAngle.ANGLE_0,
+        position: [
+          {
+            x: 4,
+            y: -1
+          },
+          {
+            x: 5,
+            y: -1
+          },
+          {
+            x: 4,
+            y: 0
+          },
+          {
+            x: 5,
+            y: 0
+          }
+        ]
+      }
     }
   }
   const config = ref({
@@ -65,12 +98,8 @@ export const useBlockStore = defineStore('blockStore', () => {
     switch (type) {
       case blockModel.BlockType.LINE:
         return cloneDeep(defaultBlock.line)
-    }
-  }
-
-  const routateCheck = (block: blockModel.Block = currentBlock.value) => {
-    switch (block.type) {
-      case blockModel.BlockType.LINE:
+      case blockModel.BlockType.SQUARE:
+        return cloneDeep(defaultBlock.square)
     }
   }
 
@@ -149,12 +178,14 @@ export const useBlockStore = defineStore('blockStore', () => {
           block.blockData.position = newPostion
         }
         break
+      case blockModel.BlockType.SQUARE:
+        break
     }
     block.blockData.angle = newAngle as blockModel.BlockAngle
   }
 
   const moveBlock = (
-    action: blockModel.MoveType = blockModel.MoveType.CUSTOM,
+    action: blockModel.MoveType = blockModel.MoveType.CUSTOME,
     block: blockModel.Block = currentBlock.value
   ) => {
     //移动方块
@@ -162,7 +193,7 @@ export const useBlockStore = defineStore('blockStore', () => {
     const { position } = block.blockData
     let newPosition: blockModel.Block['blockData']['position'] = []
     switch (action) {
-      case blockModel.MoveType.CUSTOM:
+      case blockModel.MoveType.CUSTOME:
         newPosition = position.map((offset) => {
           return {
             x: offset.x,
@@ -193,14 +224,14 @@ export const useBlockStore = defineStore('blockStore', () => {
       })
     ) {
       block.blockData.position = newPosition
-    } else if (action === blockModel.MoveType.CUSTOM) {
+    } else if (action === blockModel.MoveType.CUSTOME) {
       blockReachBottom(block)
     }
   }
 
   const randomGennerateBlock = () => {
     //TODO 这里用随机
-    const randomArr = [blockModel.BlockType.LINE]
+    const randomArr = [blockModel.BlockType.LINE, blockModel.BlockType.SQUARE]
     const type = randomArr[Math.floor(Math.random() * randomArr.length)]
     const block = initBlockBoard(type)
     block.id = uuidv4()
@@ -209,14 +240,14 @@ export const useBlockStore = defineStore('blockStore', () => {
   }
 
   const boundaryCheck = (
-    action: blockModel.MoveType = blockModel.MoveType.CUSTOM,
+    action: blockModel.MoveType = blockModel.MoveType.CUSTOME,
     block: blockModel.Block = currentBlock.value
   ) => {
     //边界检测
     const { containerSize } = config.value
     const { position } = block.blockData
     switch (action) {
-      case blockModel.MoveType.CUSTOM:
+      case blockModel.MoveType.CUSTOME:
         const flag = position.some((offset) => {
           return offset.y >= containerSize.height - 1
         })
@@ -246,6 +277,7 @@ export const useBlockStore = defineStore('blockStore', () => {
         offset.y - 1
       )
     })
+    block.blockBoard = new Array(4).fill(new Array(4).fill(0))
     randomGennerateBlock()
   }
 
@@ -253,7 +285,7 @@ export const useBlockStore = defineStore('blockStore', () => {
     //开始游戏
     randomGennerateBlock()
     timmer.value = setInterval(() => {
-      moveBlock(blockModel.MoveType.CUSTOM)
+      moveBlock(blockModel.MoveType.CUSTOME)
     }, 500)
   }
   const endGame = () => {
@@ -269,6 +301,31 @@ export const useBlockStore = defineStore('blockStore', () => {
       endGame()
     }
   })
+
+  watch(
+    () => currentBlockBox.value.blockPositions,
+    (list) => {
+      if (!list) return
+      for (let i = 0; i < config.value.containerSize.height; i++) {
+        let flag = true
+        for (let j = 0; j < config.value.containerSize.width; j++) {
+          if (list[j][i] == 0) {
+            flag = false
+          }
+        }
+        if (flag) {
+          list.forEach((item) => {
+            item.splice(i, 1)
+            item.unshift(0)
+          })
+          return
+        }
+      }
+    },
+    {
+      deep: true
+    }
+  )
 
   return {
     config,

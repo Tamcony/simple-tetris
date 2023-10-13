@@ -14,6 +14,7 @@ declare module '@vue/runtime-core' {
     CustomBlockControl: typeof import('./../src/components/CustomBlockControl.vue')['default']
     CustomBlockLine: typeof import('./../src/components/blocks/CustomBlockLine.vue')['default']
     CustomBox: typeof import('./../src/components/CustomBox.vue')['default']
+    CustomGridItem: typeof import('./../src/components/CustomGridItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

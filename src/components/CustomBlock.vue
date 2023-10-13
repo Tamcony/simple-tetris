@@ -4,11 +4,9 @@
       v-for="row in block.blockBoard"
       class="flex flex-col justify-between items-center"
     >
-      <div
-        v-for="item in row"
-        class="h-20 w-20 flex justify-between items-center rounded-md"
-        :class="`h-${size} w-${size} ${item === 0 ? 'border-0' : 'bg-#000 border-1'}`"
-      >
+      <div v-for="item in row">
+
+        <CustomGridItem :item="item"></CustomGridItem>
       </div>
     </div>
   </div>

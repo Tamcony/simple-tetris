@@ -7,7 +7,7 @@
         width: `${blockStore.config.blockSize * blockStore.config.containerSize.width}px`
       }"
     >
-      <div class="w-full h-full flex flex-col justify-between relative">
+      <div class="w-full h-full flex flex-row justify-between relative">
         <template v-for="item in blockStore.currentBlockBox.blockList">
           <CustomBlock
             :type="blockModel.BlockType.LINE"
@@ -20,6 +20,18 @@
             }"
           ></CustomBlock>
         </template>
+
+        <div
+          v-for="row in blockStore.currentBlockBox.blockPositions"
+          class="flex flex-col justify-between items-center "
+        >
+          <div
+            v-for="item in row"
+            class="flex flex-row "
+          >
+            <CustomGridItem :item="item"></CustomGridItem>
+          </div>
+        </div>
       </div>
     </div>
     <CustomBlockControl

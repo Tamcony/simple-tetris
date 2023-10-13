@@ -1,5 +1,6 @@
 export enum BlockType {
-  LINE = 'line'
+  LINE = 'line',
+  SQUARE = 'square'
 }
 
 export enum BlockAngle {
@@ -35,7 +36,7 @@ export interface BlockBox {
 }
 
 export enum MoveType {
-  CUSTOM = 'custom',
+  CUSTOME = 'custom',
   LEFT = 'left',
-  RIGHT = 'right',
+  RIGHT = 'right'
 }
